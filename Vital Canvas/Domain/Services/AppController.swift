@@ -74,7 +74,16 @@ final class AppController {
         isLoading = true
         defer { isLoading = false }
 
-        let snapshot = await snapshotBuilder.buildSnapshot(for: date)
+        // Fetch raw values on cooperative thread pool, then build @Model on main actor
+        let values = await snapshotBuilder.fetchValues(for: date)
+        let snapshot = HealthSnapshot(date: date)
+        snapshot.sleepHours       = values.sleepHours
+        snapshot.averageHeartRate = values.averageHeartRate
+        snapshot.restingHeartRate = values.restingHeartRate
+        snapshot.hrv              = values.hrv
+        snapshot.stepCount        = values.stepCount
+        snapshot.workoutMinutes   = values.workoutMinutes
+        snapshot.mindfulMinutes   = values.mindfulMinutes
         snapshotRepo.save(snapshot)
 
         let historicalSnapshots = snapshotRepo.fetchRecent(days: 28)
@@ -110,12 +119,26 @@ final class AppController {
         let descriptor = FetchDescriptor<PermissionState>()
         let states = (try? modelContext.fetch(descriptor)) ?? []
         permissionState = states.first
-        // SwiftData is the source of truth — sync back to UserDefaults and memory
-        let done = permissionState?.hasCompletedOnboarding ?? false
-        if done != hasCompletedOnboarding {
-            hasCompletedOnboarding = done
-            UserDefaults.standard.set(done, forKey: kOnboardingKey)
+
+        // UserDefaults is the primary source of truth for onboarding.
+        // NEVER downgrade hasCompletedOnboarding from true → false here:
+        // SwiftData may be empty (in-memory fallback after schema change / fresh install),
+        // while the user already completed onboarding in a previous session.
+        if let state = permissionState {
+            // SwiftData record exists — upgrade UserDefaults if needed
+            if state.hasCompletedOnboarding && !hasCompletedOnboarding {
+                hasCompletedOnboarding = true
+                UserDefaults.standard.set(true, forKey: kOnboardingKey)
+            }
+        } else if hasCompletedOnboarding {
+            // UserDefaults says done but SwiftData has no record — recreate it
+            let state = PermissionState()
+            state.hasCompletedOnboarding = true
+            modelContext.insert(state)
+            try? modelContext.save()
+            permissionState = state
         }
+        // If both are false, nothing to do — onboarding not yet completed.
     }
 
     private func loadArtworks() {

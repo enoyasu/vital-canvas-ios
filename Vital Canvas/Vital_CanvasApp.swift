@@ -34,14 +34,16 @@ struct VitalCanvasApp: App {
             return c
         }
 
-        // 2nd attempt — wipe corrupted / incompatible store and retry
-        if let storeURL = FileManager.default
-            .urls(for: .applicationSupportDirectory, in: .userDomainMask)
-            .first?
-            .appending(path: "default.store") {
-            try? FileManager.default.removeItem(at: storeURL)
-            try? FileManager.default.removeItem(at: storeURL.appendingPathExtension("shm"))
-            try? FileManager.default.removeItem(at: storeURL.appendingPathExtension("wal"))
+        // 2nd attempt — wipe all .store files in Application Support and retry
+        if let dir = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first,
+           let files = try? FileManager.default.contentsOfDirectory(
+               at: dir, includingPropertiesForKeys: nil) {
+            for file in files where file.pathExtension == "store"
+                || file.lastPathComponent.hasSuffix(".store-shm")
+                || file.lastPathComponent.hasSuffix(".store-wal") {
+                try? FileManager.default.removeItem(at: file)
+            }
         }
         if let c = try? ModelContainer(for: schema, configurations: [config]) {
             return c
