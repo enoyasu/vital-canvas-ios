@@ -35,7 +35,7 @@ final class ArtworkRepository {
         return (try? modelContext.fetch(descriptor))?.first
     }
 
-    func save(_ artwork: CanvasArtwork, image: UIImage?) {
+    func save(artwork: CanvasArtwork, image: UIImage?) {
         if let image = image, let data = image.pngData() {
             let filename = "\(artwork.id.uuidString).png"
             let url = imageURL(for: filename)

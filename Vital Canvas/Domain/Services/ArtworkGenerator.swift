@@ -1,7 +1,7 @@
 import SwiftUI
 import CoreGraphics
 
-@MainActor
+// nonisolated so generate() can be called from Task.detached (background thread)
 final class ArtworkGenerator {
 
     struct ArtParams {

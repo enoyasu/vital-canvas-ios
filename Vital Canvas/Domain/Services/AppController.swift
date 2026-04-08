@@ -2,13 +2,16 @@ import Foundation
 import SwiftData
 import UIKit
 
+private let kOnboardingKey = "vc_onboarding_done"
+
 @Observable
 final class AppController {
     private(set) var isLoading = false
     private(set) var todayArtwork: CanvasArtwork?
     private(set) var recentArtworks: [CanvasArtwork] = []
     private(set) var permissionState: PermissionState?
-    private(set) var hasCompletedOnboarding = false
+    // Read from UserDefaults immediately so the correct screen is shown before SwiftData loads
+    private(set) var hasCompletedOnboarding: Bool = UserDefaults.standard.bool(forKey: kOnboardingKey)
 
     private let authService = HealthAuthorizationService()
     private let snapshotBuilder = SnapshotBuilder()
@@ -17,17 +20,23 @@ final class AppController {
     private var artworkRepo: ArtworkRepository?
     private var snapshotRepo: SnapshotRepository?
 
+    // MARK: - Setup (called once from .onAppear with the stable ModelContext)
+
     func setup(modelContext: ModelContext) {
         artworkRepo = ArtworkRepository(modelContext: modelContext)
         snapshotRepo = SnapshotRepository(modelContext: modelContext)
         artworkRepo?.ensureArtworksDirectory()
-        loadPermissionState(modelContext: modelContext)
+        syncPermissionState(modelContext: modelContext)
         loadArtworks()
     }
 
     // MARK: - Onboarding
 
     func completeOnboarding(modelContext: ModelContext) {
+        // Persist to both UserDefaults (instant) and SwiftData (durable)
+        UserDefaults.standard.set(true, forKey: kOnboardingKey)
+        hasCompletedOnboarding = true
+
         if let state = permissionState {
             state.hasCompletedOnboarding = true
             try? modelContext.save()
@@ -38,7 +47,6 @@ final class AppController {
             try? modelContext.save()
             permissionState = state
         }
-        hasCompletedOnboarding = true
     }
 
     func requestHealthPermissions() async {
@@ -77,23 +85,12 @@ final class AppController {
         let titleResult = titleGen.generate(params: params, language: language)
         let artParams = ArtworkGenerator.makeParams(normalized: params, seed: seed)
 
-        let artwork = CanvasArtwork(
-            date: date,
-            seed: seed,
-            title: titleResult.title,
-            subtitle: titleResult.subtitle,
-            summary: titleResult.summary,
-            sleep: params.sleep,
-            hrv: params.hrv,
-            restingHR: params.restingHR,
-            activity: params.activity,
-            mindfulness: params.mindfulness
-        )
-
-        let image = await MainActor.run {
+        // Generate image on a background thread to avoid blocking the main actor
+        let image = await Task.detached(priority: .userInitiated) {
             ArtworkGenerator.generate(params: artParams)
-        }
-        artworkRepo.save(artwork, image: image)
+        }.value
+
+        artworkRepo.save(artwork: makeArtwork(date: date, seed: seed, title: titleResult, params: params), image: image)
         loadArtworks()
     }
 
@@ -103,11 +100,16 @@ final class AppController {
 
     // MARK: - Private
 
-    private func loadPermissionState(modelContext: ModelContext) {
+    private func syncPermissionState(modelContext: ModelContext) {
         let descriptor = FetchDescriptor<PermissionState>()
         let states = (try? modelContext.fetch(descriptor)) ?? []
         permissionState = states.first
-        hasCompletedOnboarding = permissionState?.hasCompletedOnboarding ?? false
+        // SwiftData is the source of truth — sync back to UserDefaults and memory
+        let done = permissionState?.hasCompletedOnboarding ?? false
+        if done != hasCompletedOnboarding {
+            hasCompletedOnboarding = done
+            UserDefaults.standard.set(done, forKey: kOnboardingKey)
+        }
     }
 
     private func loadArtworks() {
@@ -123,5 +125,24 @@ final class AppController {
         let m = components.month ?? 1
         let d = components.day ?? 1
         return y * 10000 + m * 100 + d
+    }
+
+    private func makeArtwork(
+        date: Date, seed: Int,
+        title: ArtworkTitleGenerator.TitleResult,
+        params: BaselineCalculator.NormalizedParams
+    ) -> CanvasArtwork {
+        CanvasArtwork(
+            date: date,
+            seed: seed,
+            title: title.title,
+            subtitle: title.subtitle,
+            summary: title.summary,
+            sleep: params.sleep,
+            hrv: params.hrv,
+            restingHR: params.restingHR,
+            activity: params.activity,
+            mindfulness: params.mindfulness
+        )
     }
 }
