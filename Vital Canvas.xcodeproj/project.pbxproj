@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		B01C2E582F86100000AAC56E /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B01C2E592F86100000AAC56E /* HealthKit.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B01C2E3A2F86022C00AAC56E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,8 @@
 		B01C2E2A2F86022700AAC56E /* Vital Canvas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Vital Canvas.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B01C2E392F86022C00AAC56E /* Vital CanvasTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Vital CanvasTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B01C2E432F86022C00AAC56E /* Vital CanvasUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Vital CanvasUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B01C2E562F860CA700AAC56E /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLAUDE.md; sourceTree = "<group>"; };
+		B01C2E592F86100000AAC56E /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,6 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B01C2E582F86100000AAC56E /* HealthKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,9 +82,11 @@
 		B01C2E212F86022700AAC56E = {
 			isa = PBXGroup;
 			children = (
+				B01C2E562F860CA700AAC56E /* CLAUDE.md */,
 				B01C2E2C2F86022700AAC56E /* Vital Canvas */,
 				B01C2E3C2F86022C00AAC56E /* Vital CanvasTests */,
 				B01C2E462F86022C00AAC56E /* Vital CanvasUITests */,
+				B01C2E5A2F86100000AAC56E /* Frameworks */,
 				B01C2E2B2F86022700AAC56E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +99,14 @@
 				B01C2E432F86022C00AAC56E /* Vital CanvasUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B01C2E5A2F86100000AAC56E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B01C2E592F86100000AAC56E /* HealthKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -395,11 +412,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Vital Canvas/Vital Canvas.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5K5YCF5332;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Vital Canvas reads your health data to shape your daily artwork. Nothing leaves your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -427,11 +446,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Vital Canvas/Vital Canvas.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5K5YCF5332;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Vital Canvas reads your health data to shape your daily artwork. Nothing leaves your device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

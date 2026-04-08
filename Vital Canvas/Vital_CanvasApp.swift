@@ -1,23 +1,21 @@
-//
-//  Vital_CanvasApp.swift
-//  Vital Canvas
-//
-//  Created by 榎本康寿 on 2026/04/08.
-//
-
 import SwiftUI
 import SwiftData
 
 @main
-struct Vital_CanvasApp: App {
+struct VitalCanvasApp: App {
+    @State private var controller = AppController()
+    @State private var languageManager = LanguageManager()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            HealthSnapshot.self,
+            BaselineProfile.self,
+            CanvasArtwork.self,
+            PermissionState.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(for: schema, configurations: [config])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
@@ -25,8 +23,34 @@ struct Vital_CanvasApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView(controller: controller, languageManager: languageManager)
+                .onAppear {
+                    controller.setup(modelContext: sharedModelContainer.mainContext)
+                }
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+struct RootView: View {
+    var controller: AppController
+    var languageManager: LanguageManager
+
+    var body: some View {
+        Group {
+            if !languageManager.hasSelectedLanguage {
+                LanguageSelectionView(languageManager: languageManager)
+                    .transition(.opacity)
+            } else if !controller.hasCompletedOnboarding {
+                OnboardingView(controller: controller, languageManager: languageManager)
+                    .transition(.opacity)
+            } else {
+                HomeView(controller: controller, languageManager: languageManager)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: languageManager.hasSelectedLanguage)
+        .animation(.easeInOut(duration: 0.3), value: controller.hasCompletedOnboarding)
+        .preferredColorScheme(.dark)
     }
 }
