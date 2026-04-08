@@ -27,7 +27,7 @@ struct OnboardingView: View {
 
                 TabView(selection: $currentPage) {
                     ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
-                        OnboardingPageView(symbolName: page.symbol, title: page.title, body: page.body)
+                        OnboardingPageView(symbolName: page.symbol, title: page.title, description: page.body)
                             .tag(index)
                     }
                 }
@@ -102,7 +102,7 @@ struct OnboardingView: View {
 private struct OnboardingPageView: View {
     let symbolName: String
     let title: String
-    let body: String
+    let description: String
 
     var body: some View {
         VStack(spacing: VCSpacing.xl) {
@@ -120,7 +120,7 @@ private struct OnboardingPageView: View {
                     .foregroundStyle(VCColor.textPrimary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(body)
+                Text(description)
                     .font(VCFont.body(15))
                     .foregroundStyle(VCColor.textSecondary)
                     .multilineTextAlignment(.center)
