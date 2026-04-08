@@ -4,6 +4,7 @@ import UIKit
 
 private let kOnboardingKey = "vc_onboarding_done"
 
+@MainActor
 @Observable
 final class AppController {
     private(set) var isLoading = false
@@ -19,10 +20,13 @@ final class AppController {
     private let titleGen = ArtworkTitleGenerator()
     private var artworkRepo: ArtworkRepository?
     private var snapshotRepo: SnapshotRepository?
+    private var isSetUp = false
 
-    // MARK: - Setup (called once from .onAppear with the stable ModelContext)
+    // MARK: - Setup (called once; safe to call multiple times)
 
     func setup(modelContext: ModelContext) {
+        guard !isSetUp else { return }
+        isSetUp = true
         artworkRepo = ArtworkRepository(modelContext: modelContext)
         snapshotRepo = SnapshotRepository(modelContext: modelContext)
         artworkRepo?.ensureArtworksDirectory()
@@ -56,6 +60,8 @@ final class AppController {
     // MARK: - Artwork
 
     func generateTodayArtworkIfNeeded(modelContext: ModelContext, language: Language = .english) async {
+        // Lazy setup: ensure repos are ready even if onAppear fires after this task
+        if !isSetUp { setup(modelContext: modelContext) }
         guard artworkRepo?.fetchForDate(Date()) == nil else {
             loadArtworks()
             return

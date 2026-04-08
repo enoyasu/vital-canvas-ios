@@ -60,20 +60,24 @@ struct RootView: View {
     var languageManager: LanguageManager
 
     var body: some View {
-        Group {
-            if !languageManager.hasSelectedLanguage {
-                LanguageSelectionView(languageManager: languageManager)
-                    .transition(.opacity)
-            } else if !controller.hasCompletedOnboarding {
-                OnboardingView(controller: controller, languageManager: languageManager)
-                    .transition(.opacity)
-            } else {
-                HomeView(controller: controller, languageManager: languageManager)
-                    .transition(.opacity)
+        ZStack {
+            VCColor.background.ignoresSafeArea()
+
+            Group {
+                if !languageManager.hasSelectedLanguage {
+                    LanguageSelectionView(languageManager: languageManager)
+                        .transition(.opacity)
+                } else if !controller.hasCompletedOnboarding {
+                    OnboardingView(controller: controller, languageManager: languageManager)
+                        .transition(.opacity)
+                } else {
+                    HomeView(controller: controller, languageManager: languageManager)
+                        .transition(.opacity)
+                }
             }
+            .animation(.easeInOut(duration: 0.3), value: languageManager.hasSelectedLanguage)
+            .animation(.easeInOut(duration: 0.3), value: controller.hasCompletedOnboarding)
         }
-        .animation(.easeInOut(duration: 0.3), value: languageManager.hasSelectedLanguage)
-        .animation(.easeInOut(duration: 0.3), value: controller.hasCompletedOnboarding)
         .preferredColorScheme(.dark)
     }
 }
